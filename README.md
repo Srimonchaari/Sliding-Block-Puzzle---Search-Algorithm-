@@ -125,8 +125,9 @@ Sliding-Block-Puzzle/
 ├── astar.py                The informed search algorithm and its heuristic
 ├── main.py                 Runs both algorithms and prints the comparison
 └── docs/
-    ├── index.html          Our presentation slides (open in a browser)
-    └── talk-script.md       What to actually say for each slide, timed to 10 minutes
+    ├── index.html                             Our presentation slides (open in a browser, works on mobile too)
+    ├── Sliding-Block-Puzzle-BFS-vs-Astar.pptx   The same slides as a PowerPoint file, for sharing
+    └── talk-script.md                          What to actually say for each slide, timed to 10 minutes
 ```
 
 ## 6. Architecture diagram
@@ -229,7 +230,9 @@ We ran both algorithms on the exact start and target layout from the task sheet.
 
 ## 11. The presentation slides
 
-Open `docs/index.html` in any web browser (just double click the file, or drag it into a browser window) to see our full slide deck. It covers the problem, the theory behind both algorithms, our measured results, and our conclusions.
+Open `docs/index.html` in any web browser (just double click the file, or drag it into a browser window) to see our full slide deck. It covers the problem, the theory behind both algorithms, our measured results, and our conclusions. It also works fine on a phone, so anyone in the group can review it on the go.
+
+We also have `docs/Sliding-Block-Puzzle-BFS-vs-Astar.pptx`, a PowerPoint file with the same slides, so it can be shared, edited, or presented from without needing a browser.
 
 `docs/talk-script.md` has the actual words to say for each slide, timed to fit a 10 minute talk, along with a list of questions the tutor is likely to ask and how to answer them.
 
