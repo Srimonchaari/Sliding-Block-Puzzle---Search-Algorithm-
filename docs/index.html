@@ -94,7 +94,8 @@
   h1, h2, h3, h4 { text-wrap: balance; margin: 0; font-weight: 700; letter-spacing: -0.01em; }
   p { margin: 0; }
 
-  .deck { max-width: 1120px; margin: 0 auto; padding: 0 32px 100px; }
+  .app { display: flex; }
+  .deck { max-width: 1120px; margin: 0 auto; padding: 0 32px 100px; flex: 1 1 auto; min-width: 0; }
 
   .slide { padding: 68px 0 0; border-top: 1px solid var(--line); }
   .slide:first-child { border-top: none; }
@@ -123,6 +124,17 @@
   .refs { display: flex; flex-direction: column; gap: 8px; }
   .refs .ref { font-size: 13.5px; color: var(--ink-soft); display: flex; gap: 8px; }
   .refs .ref .n { color: var(--ink-muted); font-weight: 700; flex-shrink: 0; }
+
+  /* task sheet Q&A */
+  .qa-item { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; background: var(--surface-2); }
+  .qa-item + .qa-item { margin-top: 12px; }
+  .qa-q { font-size: 14.5px; font-weight: 700; color: var(--ink); display: flex; gap: 8px; align-items: baseline; }
+  .qa-q .q-mark { color: var(--accent-ink); flex-shrink: 0; }
+  .qa-a { font-size: 14px; color: var(--ink-soft); margin-top: 6px; }
+  .qa-proof { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+  .qa-code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12px; background: var(--code-bg); color: var(--code-accent2); padding: 3px 9px; border-radius: 6px; }
+  .qa-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: var(--accent2); background: var(--accent2-soft); padding: 3px 9px; border-radius: 100px; }
+  .qa-status svg { width: 11px; height: 11px; }
 
   .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em; padding: 3px 9px; border-radius: 100px; background: var(--surface-2); color: var(--ink-soft); border: 1px solid var(--line); }
   .pill.orange { background: var(--accent-soft); color: var(--accent-ink); border-color: transparent; }
@@ -250,11 +262,93 @@
     .theme-toggle svg { width: 18px; height: 18px; }
   }
 
-  @media print { .theme-toggle { display: none; } .slide { break-inside: avoid; page-break-after: always; } }
+  /* ---------- navigation sidebar ---------- */
+  .sidebar {
+    width: 240px; flex: 0 0 240px;
+    position: sticky; top: 0; height: 100vh;
+    overflow-y: auto;
+    border-right: 1px solid var(--line);
+    padding: 24px 14px 24px 20px;
+  }
+  .sidebar-brand {
+    font-size: 13px; font-weight: 700; color: var(--ink);
+    margin-bottom: 18px; padding-right: 6px;
+    line-height: 1.3;
+  }
+  .sidebar-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+  .sidebar-link {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 8px 14px; border-radius: 100px;
+    font-size: 13px; color: var(--ink-muted); text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .sidebar-link .n { font-size: 10.5px; font-variant-numeric: tabular-nums; color: var(--ink-muted); flex-shrink: 0; width: 14px; }
+  .sidebar-link:hover { background: var(--surface-2); color: var(--ink); }
+  .sidebar-link.active { background: var(--accent); color: #17140f; font-weight: 700; }
+  .sidebar-link.active .n { color: #17140f; }
+
+  .sidebar-toggle {
+    display: none;
+    position: fixed; top: 18px; left: 18px; z-index: 101;
+    width: 42px; height: 42px; border-radius: 50%;
+    align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--line);
+    box-shadow: var(--shadow); cursor: pointer;
+  }
+  .sidebar-toggle svg { width: 20px; height: 20px; color: var(--ink); }
+  .sidebar-toggle svg.icon-close { display: none; position: absolute; }
+  .sidebar-toggle[aria-expanded="true"] svg.icon-open { display: none; }
+  .sidebar-toggle[aria-expanded="true"] svg.icon-close { display: block; }
+  .sidebar-backdrop { display: none; }
+
+  /* ---------- back to top with progress ring ---------- */
+  .to-top {
+    position: fixed; right: 18px; bottom: 18px; z-index: 100;
+    width: 48px; height: 48px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 50%;
+    box-shadow: var(--shadow); cursor: pointer;
+    opacity: 0; pointer-events: none; visibility: hidden;
+    transform: translateY(8px);
+    transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  }
+  .to-top.visible { opacity: 1; pointer-events: auto; visibility: visible; transform: translateY(0); }
+  .to-top:hover { border-color: var(--accent); }
+  .to-top:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .to-top svg.arrow { width: 16px; height: 16px; color: var(--ink); position: relative; z-index: 1; }
+  .to-top svg.ring { position: absolute; inset: 0; transform: rotate(-90deg); }
+  .to-top .ring-track { stroke: var(--line); }
+  .to-top .ring-fill { stroke: var(--accent); transition: stroke-dashoffset 0.1s linear; }
+
+  @media print { .theme-toggle, .sidebar, .sidebar-toggle, .to-top { display: none; } .slide { break-inside: avoid; page-break-after: always; } }
+
+  /* ---------- sidebar collapses to a drawer below desktop width ---------- */
+  @media (max-width: 980px) {
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh;
+      width: 260px; flex: 0 0 auto;
+      background: var(--page);
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      z-index: 102;
+      padding-top: 70px;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-toggle { display: flex; }
+    .sidebar-backdrop {
+      display: block; position: fixed; inset: 0; z-index: 101;
+      background: rgba(0,0,0,0.35);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .sidebar-backdrop.visible { opacity: 1; pointer-events: auto; }
+  }
 
   /* ---------- mobile ---------- */
   @media (max-width: 640px) {
     .deck { padding: 0 18px 70px; }
+    .to-top { right: 12px; bottom: 12px; width: 42px; height: 42px; }
+    .to-top svg.arrow { width: 14px; height: 14px; }
     .slide { padding: 44px 0 0; }
     .slide-head { flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 20px; }
     .slide-title { font-size: 22px; }
@@ -266,6 +360,11 @@
       display: flex !important;
       flex-direction: column !important;
     }
+
+    .qa-item { padding: 12px 14px; }
+    .qa-q { font-size: 13.5px; }
+    .qa-a { font-size: 13px; }
+    .qa-code { font-size: 11px; word-break: break-word; }
 
     .board { width: 108px; }
     .board .cell { font-size: 14px; }
@@ -311,10 +410,45 @@
   </svg>
 </button>
 
+<button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Open slide navigation" aria-expanded="false">
+  <svg class="icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <line x1="3.5" y1="6" x2="20.5" y2="6"/>
+    <line x1="3.5" y1="12" x2="20.5" y2="12"/>
+    <line x1="3.5" y1="18" x2="20.5" y2="18"/>
+  </svg>
+  <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <line x1="5" y1="5" x2="19" y2="19"/>
+    <line x1="19" y1="5" x2="5" y2="19"/>
+  </svg>
+</button>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<div class="app">
+  <nav class="sidebar" id="sidebar" aria-label="Slide navigation">
+    <div class="sidebar-brand">Sliding Block Puzzle<br>BFS vs A*</div>
+    <ul class="sidebar-list">
+      <li><a class="sidebar-link" href="#slide-title" data-nav><span class="n">·</span>Title</a></li>
+      <li><a class="sidebar-link" href="#slide-demo" data-nav><span class="n">01</span>Watch it solve</a></li>
+      <li><a class="sidebar-link" href="#slide-problem" data-nav><span class="n">02</span>The problem</a></li>
+      <li><a class="sidebar-link" href="#slide-foundations" data-nav><span class="n">03</span>Theory basics</a></li>
+      <li><a class="sidebar-link" href="#slide-bfs" data-nav><span class="n">04</span>BFS</a></li>
+      <li><a class="sidebar-link" href="#slide-astar" data-nav><span class="n">05</span>A* search</a></li>
+      <li><a class="sidebar-link" href="#slide-solvability" data-nav><span class="n">06</span>Solvability</a></li>
+      <li><a class="sidebar-link" href="#slide-results" data-nav><span class="n">07</span>Results</a></li>
+      <li><a class="sidebar-link" href="#slide-heatmap" data-nav><span class="n">08</span>Heatmap</a></li>
+      <li><a class="sidebar-link" href="#slide-heuristic" data-nav><span class="n">09</span>Why Manhattan</a></li>
+      <li><a class="sidebar-link" href="#slide-context" data-nav><span class="n">10</span>Numbers in context</a></li>
+      <li><a class="sidebar-link" href="#slide-taskqa" data-nav><span class="n">11</span>Task sheet Q&amp;A</a></li>
+      <li><a class="sidebar-link" href="#slide-conclusions" data-nav><span class="n">12</span>Conclusions</a></li>
+      <li><a class="sidebar-link" href="#slide-references" data-nav><span class="n">13</span>References</a></li>
+      <li><a class="sidebar-link" href="#slide-closing" data-nav><span class="n">·</span>Thank you</a></li>
+    </ul>
+  </nav>
+
 <div class="deck">
 
   <!-- TITLE -->
-  <section class="kicker-page">
+  <section class="kicker-page" id="slide-title">
     <div class="eyebrow">Seminar Cognitive Systems 2 · Behavior Control · Problem KS2.1</div>
     <h1>Sliding Block Puzzle</h1>
     <p class="slide-sub" style="font-size:16.5px; max-width:640px; margin-top:14px;">
@@ -329,7 +463,7 @@
   </section>
 
   <!-- LIVE DEMO -->
-  <section class="slide">
+  <section class="slide" id="slide-demo">
     <div class="slide-head">
       <div>
         <div class="slide-eyebrow">Watch it solve</div>
@@ -355,7 +489,7 @@
   </section>
 
   <!-- PROBLEM -->
-  <section class="slide">
+  <section class="slide" id="slide-problem">
     <div class="slide-head">
       <div>
         <div class="slide-eyebrow">The problem</div>
@@ -393,7 +527,7 @@
   </section>
 
   <!-- FOUNDATIONS -->
-  <section class="slide">
+  <section class="slide" id="slide-foundations">
     <div class="slide-head">
       <div>
         <div class="slide-eyebrow">Theory</div>
@@ -429,7 +563,7 @@
   </section>
 
   <!-- BFS -->
-  <section class="slide">
+  <section class="slide" id="slide-bfs">
     <div class="slide-head">
       <div>
         <div class="slide-eyebrow">Algorithm one, uninformed</div>
@@ -501,7 +635,7 @@
   </section>
 
   <!-- A* -->
-  <section class="slide">
+  <section class="slide" id="slide-astar">
     <div class="slide-head">
       <div>
         <div class="slide-eyebrow">Algorithm two, informed</div>
@@ -591,7 +725,7 @@
   </section>
 
   <!-- SOLVABILITY -->
-  <section class="slide">
+  <section class="slide" id="slide-solvability">
     <div class="slide-head">
       <div>
         <div class="slide-eyebrow">A quick check</div>
@@ -629,7 +763,7 @@
   </section>
 
   <!-- RESULTS TABLE + BAR -->
-  <section class="slide">
+  <section class="slide" id="slide-results">
     <div class="slide-head">
       <div>
         <div class="slide-eyebrow">Results</div>
@@ -665,7 +799,7 @@
   </section>
 
   <!-- HEATMAP -->
-  <section class="slide">
+  <section class="slide" id="slide-heatmap">
     <div class="slide-head">
       <div>
         <div class="slide-eyebrow">Results</div>
@@ -705,7 +839,7 @@
   </section>
 
   <!-- WHY MANHATTAN -->
-  <section class="slide">
+  <section class="slide" id="slide-heuristic">
     <div class="slide-head">
       <div>
         <div class="slide-eyebrow">Discussion</div>
@@ -736,7 +870,7 @@
   </section>
 
   <!-- CONTEXT -->
-  <section class="slide">
+  <section class="slide" id="slide-context">
     <div class="slide-head">
       <div>
         <div class="slide-eyebrow">Discussion</div>
@@ -771,14 +905,111 @@
     </div>
   </section>
 
+  <!-- TASK SHEET Q&A -->
+  <section class="slide" id="slide-taskqa">
+    <div class="slide-head">
+      <div>
+        <div class="slide-eyebrow">Requirement check</div>
+        <h2 class="slide-title">Every question the task sheet asks, answered</h2>
+        <p class="slide-sub">Straight from Problem KS2.1. Each answer points at the exact code line and a real result, not just a claim.</p>
+      </div>
+      <div class="slide-num">11</div>
+    </div>
+    <div class="bento">
+      <div class="card c12">
+
+        <div class="qa-item">
+          <div class="qa-q"><span class="q-mark">Q1.</span>Does the program solve the puzzle with at least two different search algorithms, one uninformed and one A*?</div>
+          <div class="qa-a">Yes. Breadth-First Search is the uninformed algorithm, A* is the informed one. They live in separate files so each can be read on its own.</div>
+          <div class="qa-proof">
+            <span class="qa-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="4,13 9,18 20,6"/></svg>Satisfied</span>
+            <span class="qa-code">bfs.py: def bfs(start, target):</span>
+            <span class="qa-code">astar.py: def a_star(start, target):</span>
+          </div>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-q"><span class="q-mark">Q2.</span>Does A* use a permissible (admissible) heuristic?</div>
+          <div class="qa-a">Yes, Manhattan distance. It never overestimates because a real move can only cost the same or more than a straight-line count, tiles must go around each other. Proof: the heuristic guesses 20 for the start board, and the real answer is 28, so it never guessed too high.</div>
+          <div class="qa-proof">
+            <span class="qa-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="4,13 9,18 20,6"/></svg>Satisfied</span>
+            <span class="qa-code">puzzle.py: def manhattan_distance(board, positions):</span>
+            <span class="qa-code">h(start) = 20  &le;  true cost = 28</span>
+          </div>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-q"><span class="q-mark">Q3.</span>Does the program use the exact start and target boards from the task sheet, including the blank position?</div>
+          <div class="qa-a">Yes. Blank sits bottom-right in the start board and top-left in the target board, exactly as printed on the task sheet.</div>
+          <div class="qa-proof">
+            <span class="qa-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="4,13 9,18 20,6"/></svg>Satisfied</span>
+            <span class="qa-code">puzzle.py: START = [[8,7,6],[5,4,3],[2,1,0]]</span>
+            <span class="qa-code">puzzle.py: TARGET = [[0,1,2],[3,4,5],[6,7,8]]</span>
+          </div>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-q"><span class="q-mark">Q4.</span>Does the program count and display the number of node expansions?</div>
+          <div class="qa-a">Yes, for both algorithms.</div>
+          <div class="qa-proof">
+            <span class="qa-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="4,13 9,18 20,6"/></svg>Satisfied</span>
+            <span class="qa-code">bfs.py:24: node_expansions += 1</span>
+            <span class="qa-code">Output: BFS 178,223 &nbsp;|&nbsp; A* 726</span>
+          </div>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-q"><span class="q-mark">Q5.</span>Does the program count and display the maximum number of nodes held in memory at any point?</div>
+          <div class="qa-a">Yes, for both algorithms.</div>
+          <div class="qa-proof">
+            <span class="qa-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="4,13 9,18 20,6"/></svg>Satisfied</span>
+            <span class="qa-code">bfs.py:34-35: if nodes_in_memory &gt; max_nodes_in_memory:</span>
+            <span class="qa-code">Output: BFS 185,046 &nbsp;|&nbsp; A* 1,444</span>
+          </div>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-q"><span class="q-mark">Q6.</span>Does the program count and display the number of moves needed to solve the puzzle?</div>
+          <div class="qa-a">Yes. Moves is the length of the solution path minus one, since the path includes the start board itself.</div>
+          <div class="qa-proof">
+            <span class="qa-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="4,13 9,18 20,6"/></svg>Satisfied</span>
+            <span class="qa-code">main.py:30: moves = len(path) - 1</span>
+            <span class="qa-code">Output: 28 moves, both algorithms</span>
+          </div>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-q"><span class="q-mark">Q7.</span>Does the program avoid using libraries that implement search algorithms?</div>
+          <div class="qa-a">Yes. The only import outside our own files is Python's time module, used purely as a clock to measure runtime. No queue, heap, or graph search library anywhere. The queue in BFS and the priority list in A* are both plain lists we wrote and manage ourselves.</div>
+          <div class="qa-proof">
+            <span class="qa-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="4,13 9,18 20,6"/></svg>Satisfied</span>
+            <span class="qa-code">main.py:5: import time</span>
+            <span class="qa-code">astar.py: def pop_best(frontier): (hand-written, no heapq)</span>
+          </div>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-q"><span class="q-mark">Q8.</span>Do we compare the performances of the algorithms and discuss our observations?</div>
+          <div class="qa-a">Yes. Same start and target, same counters, run for real on both algorithms, with a comparison table, a bar chart, and a heatmap, followed by a discussion of why the gap exists.</div>
+          <div class="qa-proof">
+            <span class="qa-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="4,13 9,18 20,6"/></svg>Satisfied</span>
+            <span class="qa-code">main.py: def run(name, search_function):</span>
+            <span class="qa-code">See: Results, Heatmap, Why Manhattan distance slides</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- CONCLUSIONS -->
-  <section class="slide">
+  <section class="slide" id="slide-conclusions">
     <div class="slide-head">
       <div>
         <div class="slide-eyebrow">Discussion</div>
         <h2 class="slide-title">What we took away from this</h2>
       </div>
-      <div class="slide-num">11</div>
+      <div class="slide-num">12</div>
     </div>
     <div class="bento">
       <div class="card c4">
@@ -801,17 +1032,31 @@
           <li>Both share the same board and move logic, so the comparison is only about the search strategy</li>
         </ul>
       </div>
+      <div class="card c12">
+        <div class="card-title">Task sheet checklist, all 8 requirements</div>
+        <ul class="bullets" style="display:grid; grid-template-columns: repeat(2,1fr); gap:10px;">
+          <li>Q1. Two search algorithms, one uninformed and one A*: <b>done</b></li>
+          <li>Q2. A* uses a permissible heuristic: <b>done</b>, h(start)=20 &le; 28</li>
+          <li>Q3. Exact start/target boards, blank included: <b>done</b></li>
+          <li>Q4. Counts and displays node expansions: <b>done</b></li>
+          <li>Q5. Counts and displays max nodes in memory: <b>done</b></li>
+          <li>Q6. Counts and displays move count: <b>done</b>, 28 moves</li>
+          <li>Q7. No search-algorithm libraries used: <b>done</b></li>
+          <li>Q8. Performances compared and discussed: <b>done</b></li>
+        </ul>
+        <p style="margin-top:10px; font-size:12.5px; color:var(--ink-muted);">Full answers with code lines and proof are on the previous slide.</p>
+      </div>
     </div>
   </section>
 
   <!-- REFERENCES -->
-  <section class="slide">
+  <section class="slide" id="slide-references">
     <div class="slide-head">
       <div>
         <div class="slide-eyebrow">References</div>
         <h2 class="slide-title">Sources</h2>
       </div>
-      <div class="slide-num">12</div>
+      <div class="slide-num">13</div>
     </div>
     <div class="bento">
       <div class="card c12">
@@ -827,12 +1072,24 @@
     </div>
   </section>
 
-  <section class="closing">
+  <section class="closing" id="slide-closing">
     <h1>Thank you</h1>
     <p>Sliding Block Puzzle, BFS vs A*, Seminar Cognitive Systems 2</p>
   </section>
 
 </div>
+</div>
+
+<button class="to-top" id="toTop" type="button" aria-label="Back to top">
+  <svg class="ring" viewBox="0 0 48 48">
+    <circle class="ring-track" cx="24" cy="24" r="21" fill="none" stroke-width="3"/>
+    <circle class="ring-fill" id="ringFill" cx="24" cy="24" r="21" fill="none" stroke-width="3" stroke-linecap="round"/>
+  </svg>
+  <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="19" x2="12" y2="5"/>
+    <polyline points="6,11 12,5 18,11"/>
+  </svg>
+</button>
 
 <script>
 (function () {
@@ -898,5 +1155,79 @@
     root.setAttribute("data-theme", next);
     try { localStorage.setItem("theme", next); } catch (e) {}
   });
+})();
+
+(function () {
+  // Sidebar open/close, auto-collapses after picking a slide (mobile/tablet).
+  var sidebar = document.getElementById("sidebar");
+  var sidebarToggle = document.getElementById("sidebarToggle");
+  var backdrop = document.getElementById("sidebarBackdrop");
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll("[data-nav]"));
+
+  function closeSidebar() {
+    sidebar.classList.remove("open");
+    backdrop.classList.remove("visible");
+    sidebarToggle.setAttribute("aria-expanded", "false");
+  }
+  function openSidebar() {
+    sidebar.classList.add("open");
+    backdrop.classList.add("visible");
+    sidebarToggle.setAttribute("aria-expanded", "true");
+  }
+
+  sidebarToggle.addEventListener("click", function () {
+    if (sidebar.classList.contains("open")) closeSidebar(); else openSidebar();
+  });
+  backdrop.addEventListener("click", closeSidebar);
+  navLinks.forEach(function (link) {
+    link.addEventListener("click", function () {
+      // Always close: harmless on desktop (sidebar has no "open" state there),
+      // and guarantees the drawer collapses on mobile/tablet every time.
+      closeSidebar();
+    });
+  });
+
+  // Scroll-spy: highlight whichever slide is currently in view.
+  var sections = navLinks.map(function (link) {
+    return document.querySelector(link.getAttribute("href"));
+  });
+
+  function updateActiveLink() {
+    var scrollPos = window.scrollY + window.innerHeight * 0.3;
+    var activeIndex = 0;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i] && sections[i].offsetTop <= scrollPos) activeIndex = i;
+    }
+    navLinks.forEach(function (link, i) {
+      link.classList.toggle("active", i === activeIndex);
+    });
+  }
+
+  // Back-to-top button with a scroll-progress ring.
+  var toTop = document.getElementById("toTop");
+  var ringFill = document.getElementById("ringFill");
+  var radius = 21;
+  var circumference = 2 * Math.PI * radius;
+  ringFill.style.strokeDasharray = circumference.toFixed(1);
+
+  function updateToTop() {
+    var scrollTop = window.scrollY;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? scrollTop / docHeight : 0;
+    ringFill.style.strokeDashoffset = (circumference * (1 - progress)).toFixed(1);
+    toTop.classList.toggle("visible", scrollTop > 400);
+  }
+
+  toTop.addEventListener("click", function () {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  window.addEventListener("scroll", function () {
+    updateActiveLink();
+    updateToTop();
+  }, { passive: true });
+
+  updateActiveLink();
+  updateToTop();
 })();
 </script>
