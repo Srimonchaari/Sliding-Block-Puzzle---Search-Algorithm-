@@ -1,5 +1,13 @@
 <title>Sliding Block Puzzle: BFS vs A*</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+  // Set the theme before the page paints, so it never flashes the wrong mode.
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem("theme"); } catch (e) {}
+    document.documentElement.setAttribute("data-theme", saved || "dark");
+  })();
+</script>
 
 <style>
   :root {
@@ -221,7 +229,28 @@
 
   code.inline { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: var(--surface-2); padding: 2px 6px; border-radius: 5px; font-size: 0.86em; color: var(--ink); }
 
-  @media print { .slide { break-inside: avoid; page-break-after: always; } }
+  /* theme toggle: fixed sun/moon button */
+  .theme-toggle {
+    position: fixed; top: 18px; right: 18px; z-index: 100;
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--line);
+    box-shadow: var(--shadow); cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .theme-toggle:hover { border-color: var(--accent); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 20px; height: 20px; }
+  .theme-toggle .sun { color: var(--accent); display: none; }
+  .theme-toggle .moon { color: var(--accent-ink); display: none; }
+  :root[data-theme="dark"] .theme-toggle .sun { display: block; }
+  :root[data-theme="light"] .theme-toggle .moon { display: block; }
+  @media (max-width: 640px) {
+    .theme-toggle { top: 10px; right: 10px; width: 38px; height: 38px; }
+    .theme-toggle svg { width: 18px; height: 18px; }
+  }
+
+  @media print { .theme-toggle { display: none; } .slide { break-inside: avoid; page-break-after: always; } }
 
   /* ---------- mobile ---------- */
   @media (max-width: 640px) {
@@ -264,6 +293,23 @@
     .closing h1 { font-size: 30px; }
   }
 </style>
+
+<button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch between light and dark mode">
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <circle cx="12" cy="12" r="4.2"/>
+    <line x1="12" y1="2.5" x2="12" y2="5"/>
+    <line x1="12" y1="19" x2="12" y2="21.5"/>
+    <line x1="2.5" y1="12" x2="5" y2="12"/>
+    <line x1="19" y1="12" x2="21.5" y2="12"/>
+    <line x1="4.9" y1="4.9" x2="6.6" y2="6.6"/>
+    <line x1="17.4" y1="17.4" x2="19.1" y2="19.1"/>
+    <line x1="4.9" y1="19.1" x2="6.6" y2="17.4"/>
+    <line x1="17.4" y1="6.6" x2="19.1" y2="4.9"/>
+  </svg>
+  <svg class="moon" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20 14.5c-1 0.3-2 0.5-3.1 0.5-5 0-9-4-9-9 0-1.1 0.2-2.1 0.5-3.1C4.7 4 2 7.6 2 11.8 2 17 6.4 21.3 11.6 21.3c4.2 0 7.8-2.7 9-6.4-0.2 0-0.4-0.1-0.6-0.4Z"/>
+  </svg>
+</button>
 
 <div class="deck">
 
@@ -840,5 +886,17 @@
   replayBtn.addEventListener("click", play);
   render(SOLUTION[0]);
   setTimeout(play, 500);
+})();
+
+(function () {
+  var root = document.documentElement;
+  var toggle = document.getElementById("themeToggle");
+
+  toggle.addEventListener("click", function () {
+    var current = root.getAttribute("data-theme");
+    var next = current === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
 })();
 </script>
